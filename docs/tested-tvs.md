@@ -15,6 +15,7 @@ the output of **Share log** (see [Troubleshooting](troubleshooting.md#reporting-
 | 65UT7000PUA | 33.31.75 | webOS 25 (10.3.2) | Reported in [issue #11](https://github.com/lasharor/cleanyourtv-WebOS/issues/11): setup completed and the home screen works. The Input key opens the Inputs list in under a second; the TV closed the hidden picker, so it starts on each press. |
 | 43UR74006LB | 13.40.90 | webOS 23 (SDK 8.4.0, Node.js 12) | Reported in [issue #17](https://github.com/lasharor/cleanyourtv-WebOS/issues/17): works. Set up with **Set up anyway** (LG's Home is the `native` kind); Home takeover, the service and the input hook came up (service 1.5.16, launcher 1.4.15). |
 | 65NANO753PR | 03.53.45 | webOS 6.5 (SDK 6.5.3, Node.js 8.12) | Reported in [issue #18](https://github.com/lasharor/cleanyourtv-WebOS/issues/18): works. Set up with **Set up anyway** (LG's Home is the `native` kind; the firmware is listed now); Home takeover, the service and the input hook came up (service 1.6.1, launcher 1.5.1). From a cold start LG's own Home shows for about 30 seconds before CleanYourTV; with **Quick Start+** on, the TV wakes to CleanYourTV. |
+| 55UQ7570PUJ | 04.60.90 | webOS 22 (SDK 7.6.0) | Reported by its owner: rooted, set up with the debloat; the launcher (1.5.1), the service (1.6.4) and the Home takeover work. The launcher takes over 10 to 30 seconds after a cold start. |
 
 !!! note "What the status words mean"
     *Tested* means the maintainer ran it. *Reported* means someone else told us it works or what did not. A TV that is not on

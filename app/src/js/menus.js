@@ -199,27 +199,15 @@ function appMenu(a) {
         },
       },
     ];
+  if (pos >= 0 ? di.length > 1 : gridIds().length > 1)
+    items.push({
+      label: t('Move'),
+      sub: pos >= 0 ? t('in the dock') : '',
+      fn: function () {
+        startMove(a.id);
+      },
+    });
   if (pos >= 0) {
-    if (pos > 0)
-      items.push({
-        label: t('Move left in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos - 1, 0, a.id);
-          setDock(d);
-        },
-      });
-    if (pos < di.length - 1)
-      items.push({
-        label: t('Move right in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos + 1, 0, a.id);
-          setDock(d);
-        },
-      });
     items.push({
       label: t('Remove from dock'),
       fn: function () {
@@ -294,12 +282,16 @@ function customizeMenu() {
       },
     },
     { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
-    { label: t('Hidden apps'), stay: true, fn: hiddenMenu },
+    { label: t('Show and hide apps'), stay: true, fn: showHideMenu },
     {
       label: t('App order'),
-      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+      sub: cfg.sort === 'alpha' ? t('A to Z') : cfg.sort === 'custom' ? t('Your order') : t('Most used first'),
       fn: function () {
-        cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
+        /* most used first > A to Z > your own order (as you left it, or the order on screen the first time) */
+        if (cfg.sort === 'alpha') {
+          if (cfg.order && cfg.order.length) cfg.sort = 'custom';
+          else useOwnOrder();
+        } else cfg.sort = cfg.sort === 'custom' ? 'usage' : 'alpha';
         saveCfg();
       },
     },
@@ -347,6 +339,7 @@ function addButtonMenu() {
       },
     };
   });
+  items.push({ icon: 'hdmi', label: t('An input...'), stay: true, fn: addInputMenu });
   items.push({
     label: t('An app...'),
     stay: true,
@@ -372,22 +365,58 @@ function addButtonMenu() {
   });
   openMenu(t('Add a button'), items);
 }
-function hiddenMenu() {
-  var h = (cfg.hidden || []).filter(function (id) {
-    return apps.some(function (a) {
-      return a.id === id;
-    });
-  });
-  if (!h.length) return toast(t('No hidden apps'));
-  openMenu(
-    t('Hidden apps (OK to show again)'),
-    h.map(function (id) {
-      return {
-        label: title(id),
-        fn: function () {
-          unhideApp(id);
-        },
-      };
-    })
+/* an HDMI input as a top button of its own: one press switches to it */
+function addInputMenu() {
+  api('/api/inputs').then(
+    function (x) {
+      var items = (x.devices || [])
+        .filter(function (d) {
+          return d.appId;
+        })
+        .map(function (d) {
+          var port = 'HDMI ' + d.port;
+          return {
+            icon: 'hdmi',
+            label: d.label || port,
+            sub: d.label && d.label !== port ? port : '',
+            fn: function () {
+              cfg.topbar = topbar().concat([{ label: (d.label || port).slice(0, 40), icon: 'hdmi', app: d.appId }]);
+              saveCfg();
+            },
+          };
+        });
+      if (!items.length) return toast(t('No inputs found'));
+      openMenu(t('Pick an input'), items);
+    },
+    function () {
+      toast(t('Could not read the inputs'));
+    }
   );
+}
+/* every app with OK to hide it or show it again; the list stays open, so several can be changed in one go */
+function showHideMenu() {
+  var list = apps
+    .filter(function (a) {
+      return !a.sys;
+    })
+    .sort(function (a, b) {
+      return a.title.localeCompare(b.title);
+    });
+  var items = list.map(function (a) {
+    var it = {
+      label: a.title,
+      sub: isHidden(a.id) ? t('Hidden') : t('Shown'),
+      dim: isHidden(a.id),
+      stay: true,
+      fn: function () {
+        if (isHidden(a.id)) unhideApp(a.id);
+        else hideApp(a.id);
+        it.sub = isHidden(a.id) ? t('Hidden') : t('Shown');
+        it.dim = isHidden(a.id);
+        drawMenu();
+      },
+    };
+    return it;
+  });
+  openMenu(t('Show and hide apps'), items);
 }

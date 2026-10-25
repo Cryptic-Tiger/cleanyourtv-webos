@@ -52,12 +52,34 @@ function shownBar() {
         return o.action !== 'live';
       });
 }
+/* the grid order: most used first, A to Z, or your own order (cfg.order, set by moving apps); an app that is not in your order yet
+   (a new one, or one that left the dock) comes after the placed ones, most used first */
 function byOrder(a, b) {
+  if (cfg.sort === 'custom') {
+    var o = cfg.order || [],
+      ia = o.indexOf(a.id),
+      ib = o.indexOf(b.id);
+    if (ia >= 0 && ib >= 0) return ia - ib;
+    if (ia >= 0 || ib >= 0) return ia >= 0 ? -1 : 1;
+  }
   if (cfg.sort !== 'alpha') {
     var d = (usage[b.id] || 0) - (usage[a.id] || 0);
     if (Math.abs(d) > 1e-9) return d > 0 ? 1 : -1;
   }
   return a.title.localeCompare(b.title);
+}
+/* the apps of the grid, in the order they are shown */
+function gridIds() {
+  var ids = [];
+  for (var i = 2; i < rows.length; i++)
+    for (var j = 0; j < rows[i].length; j++) if (rows[i][j]._a && !rows[i][j]._a.sys) ids.push(rows[i][j]._a.id);
+  return ids;
+}
+/* switching to your own order starts from the order on screen, so nothing jumps */
+function useOwnOrder() {
+  if (cfg.sort === 'custom') return;
+  cfg.order = gridIds();
+  cfg.sort = 'custom';
 }
 function title(id) {
   for (var i = 0; i < apps.length; i++) if (apps[i].id === id) return apps[i].title;

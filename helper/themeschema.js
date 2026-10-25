@@ -52,6 +52,13 @@ const SCHEMA = [
   ['surface.rowRadius', 'int', [0, 50], 30, 'Corner radius of menu rows.'],
   ['type.font', 'enum', ['default', 'serif', 'mono'], 'default', "The typeface: the TV's own, a serif or a monospace."],
   ['type.scale', 'num', [0.8, 1.3], 1, 'Scale of the text of buttons, menus and tiles.'],
+  [
+    'type.display',
+    'enum',
+    ['bold', 'regular', 'light'],
+    'bold',
+    'Weight of the large text, the time and the name of the focused app: `light` gives a thin clock.',
+  ],
   ['clock.show', 'bool', null, true, 'Show the clock.'],
   ['clock.date', 'bool', null, true, 'Show the date beside or under the time.'],
   ['clock.layout', 'enum', ['inline', 'stack'], 'inline', '`inline`: the date beside the time; `stack`: under it.'],
@@ -119,9 +126,11 @@ const SCHEMA = [
   ['grid.y', 'auto', [0, 1000], null, 'Distance of the grid from the top edge, in px. Empty: under the dock, or 290 for an overlay.'],
   ['grid.clipTop', 'int', [0, 600], 300, 'Where scrolled rows disappear at the top, in px (`below` mode).'],
   ['grid.focusScale', 'num', [1, 1.4], 1.12, 'Scale of the focused tile.'],
+  ['grid.caption', 'bool', null, false, 'Show the name of the focused app under its tile in the grid.'],
   ['grid.overlayDim', 'num', [0, 1], 0.95, 'Opacity of the layer behind the overlay grid.'],
   ['grid.overlayH', 'int', [200, 900], 510, 'Visible height of the overlay grid before it scrolls, in px.'],
   ['tile.gloss', 'num', [0, 1], 0, 'A light highlight on every tile.'],
+  ['tile.focusGloss', 'num', [0, 1], 0, 'A light highlight on the focused tile only; the stronger of this and `tile.gloss` is used.'],
   ['tile.border', 'num', [0, 0.6], 0, 'Opacity of a thin outline on every tile.'],
   ['tile.ringWidth', 'int', [0, 10], 4, 'Width of the focus ring, in px; 0 for none.'],
   ['tile.ringOffset', 'int', [0, 14], 4, 'Space between a tile and its focus ring, in px.'],
@@ -257,6 +266,7 @@ function resolve(t, accent) {
   const clock = place(v['clock.anchor'], v['clock.align'], v['clock.x'], v['clock.y']),
     bar = place(v['bar.anchor'], v['bar.align'], v['bar.x'], v['bar.y']);
   const labels = v['bar.labels'] === 'auto' ? (v['bar.style'] === 'round' ? 'hide' : 'show') : v['bar.labels'];
+  const WEIGHT = { bold: ['600', '700'], regular: ['400', '500'], light: ['300', '400'] }[v['type.display']];
   const FONT = {
     default: '"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif',
     serif: 'Georgia,"Times New Roman",Times,serif',
@@ -274,6 +284,8 @@ function resolve(t, accent) {
     '--focus': v['colors.focus'] || A,
     '--font': FONT[v['type.font']],
     '--fs': String(v['type.scale']),
+    '--w-time': WEIGHT[0],
+    '--w-name': WEIGHT[1],
     '--pill-bg': 'rgba(' + pill.join(',') + ',' + v['surface.pillAlpha'] + ')',
     '--pill-ring': 'rgba(' + pill.join(',') + ',' + v['surface.pillRing'] + ')',
     '--pill-r': v['bar.style'] === 'round' ? '50%' : px(v['surface.pillRadius']),
@@ -326,8 +338,10 @@ function resolve(t, accent) {
     '--grid-t': px(gridY - viewTop),
     '--tile-w': px(Math.floor((v['grid.width'] - (v['grid.cols'] - 1) * v['grid.gapX']) / v['grid.cols'])),
     '--grid-fs': String(v['grid.focusScale']),
+    '--cap-d': v['grid.caption'] ? 'block' : 'none',
     '--ov-dim': String(v['grid.overlayDim']),
     '--gloss': String(v['tile.gloss']),
+    '--fgloss': String(Math.max(v['tile.gloss'], v['tile.focusGloss'])),
     '--tile-border': String(v['tile.border']),
     '--ring-w': px(v['tile.ringWidth']),
     '--ring-off': px(v['tile.ringOffset']),

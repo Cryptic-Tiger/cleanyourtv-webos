@@ -27,6 +27,7 @@ function hit(e) {
       held = false;
       return;
     }
+    if (moving) return endMove();
     act(e);
   });
 }
@@ -35,10 +36,55 @@ function options(e) {
   else if (e._o && !e._o.fixed) barMenu(e._o);
 }
 
+/* ---------- moving an app (hold OK, Move): the arrows move it in the dock or in the grid, OK or Back puts it down ----------
+   Moving in the grid switches the app order to your own order, starting from the order on screen. */
+var moving = null;
+function startMove(id) {
+  var e = tiles[id],
+    p = e && posOf(e);
+  if (!p || p[0] < 1) return;
+  if (p[0] >= 2) useOwnOrder();
+  moving = id;
+  e.classList.add('mv');
+  toast(t('Arrows move the app, OK puts it down'));
+}
+function moveKey(k) {
+  var e = tiles[moving],
+    p = e && posOf(e);
+  if (!p) return endMove();
+  if (p[0] === 1) {
+    if (k !== 37 && k !== 39) return;
+    var d = dockIds(),
+      i = d.indexOf(moving),
+      j = i + (k === 39 ? 1 : -1);
+    if (i < 0 || j < 0 || j >= d.length) return;
+    d.splice(i, 1);
+    d.splice(j, 0, moving);
+    cfg.dock = d;
+  } else {
+    var g = gridIds(),
+      a = g.indexOf(moving),
+      b = a + (k === 37 ? -1 : k === 39 ? 1 : k === 38 ? -TH.cols : TH.cols);
+    /* Down on the row above a shorter last row goes to the end of it */
+    if (k === 40 && b >= g.length && Math.floor(a / TH.cols) < Math.floor((g.length - 1) / TH.cols)) b = g.length - 1;
+    if (a < 0 || b < 0 || b >= g.length) return;
+    g.splice(a, 1);
+    g.splice(b, 0, moving);
+    cfg.order = g;
+  }
+  rebuild();
+}
+function endMove() {
+  var e = tiles[moving];
+  if (e) e.classList.remove('mv');
+  moving = null;
+  saveCfg();
+}
+
 /* Pointer focus follows real pointer movement only: a tile sliding under a still cursor, a cursor jitter when
    the remote is picked up, or a pointer move right after a button press must not steal the focus. */
 document.addEventListener('mousemove', function (ev) {
-  if (stack.length || LIVE.on || Date.now() - lastKey < 1500) return;
+  if (stack.length || LIVE.on || moving || Date.now() - lastKey < 1500) return;
   if (lastMX < 0) {
     lastMX = ev.clientX;
     lastMY = ev.clientY;
@@ -71,6 +117,23 @@ document.addEventListener('keydown', function (e) {
       swallowUp = true;
     }
     if (menuKey(k)) e.preventDefault();
+    return;
+  }
+  if (moving) {
+    if (k >= 37 && k <= 40) moveKey(k);
+    else if (k === 13 || k === 461 || k === 27 || k === 8) {
+      /* OK still held from choosing Move in the menu repeats its keydown: only a new press puts the app down */
+      if (k === 13 && downEnter) {
+        e.preventDefault();
+        return;
+      }
+      if (k === 13) {
+        downEnter = true;
+        swallowUp = true;
+      }
+      endMove();
+    }
+    e.preventDefault();
     return;
   }
   if ((TH.overlay || TH.push) && r >= 2 && (k === 461 || k === 27 || k === 8)) {
@@ -156,12 +219,14 @@ document.addEventListener('webOSRelaunch', function () {
     return;
   } /* the Guide button while Live TV is open */
   if (LIVE.on) LIVE.exit();
+  if (moving) endMove();
   load();
   wantInputs();
 });
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
     if (LIVE.on) LIVE.exit();
+    if (moving) endMove();
     closeRunningMenu();
   } else load();
 });

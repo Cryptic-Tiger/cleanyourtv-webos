@@ -16,6 +16,13 @@
    "preview": "bloom/preview.jpg"
   },
   {
+   "id": "cinema",
+   "name": "Cinema",
+   "author": "CleanYourTV",
+   "description": "Dark silk wallpaper, a thin clock and a glass dock of six wide apps at the bottom. Down slides the dock up and shows every app, its name under the focus.",
+   "preview": "cinema/preview.jpg"
+  },
+  {
    "id": "compact",
    "name": "Compact",
    "author": "CleanYourTV",

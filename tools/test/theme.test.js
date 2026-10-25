@@ -93,6 +93,41 @@ run(async () => {
     'effects are clamped, a wallpaper path is refused and unknown keys are dropped'
   );
   ok(themeMod.normalize({}, '../x') === null, 'a bad theme id is refused');
+  // the large text's weight, the name under the focused tile and a highlight on the focused tile (the Cinema theme uses all three)
+  const look = o => themeMod.resolve(themeMod.normalize(o, 'look'), '').vars;
+  const nice = look({ type: { display: 'light' }, grid: { caption: true }, tile: { gloss: 0.2, focusGloss: 0.9 } }),
+    odd = look({ type: { display: 'thin' }, grid: { caption: 'yes' }, tile: { gloss: 0.5, focusGloss: 0.1 } }),
+    none = look({});
+  ok(
+    nice['--w-time'] === '300' &&
+      nice['--w-name'] === '400' &&
+      nice['--cap-d'] === 'block' &&
+      nice['--fgloss'] === '0.9' &&
+      odd['--w-time'] === '600' &&
+      odd['--cap-d'] === 'none' &&
+      odd['--fgloss'] === '0.5' &&
+      none['--w-time'] === '600' &&
+      none['--w-name'] === '700' &&
+      none['--cap-d'] === 'none' &&
+      none['--fgloss'] === '0',
+    'type.display, grid.caption and tile.focusGloss: invalid values keep the original look, and the focused tile is never less glossy than the others'
+  );
+  // Cinema: its wallpaper stays small (the weak GPU decodes it on every opening of Home) and the dock lines up with the grid's columns
+  const cin = themeMod.normalize(
+    JSON.parse(fs.readFileSync(path.join(tdir, 'cinema', 'theme.json'), 'utf8')),
+    'cinema',
+    null,
+    path.join(tdir, 'cinema')
+  );
+  ok(
+    fs.statSync(path.join(tdir, 'cinema', 'cinema.jpg')).size < 200 * 1024 &&
+      cin.v['effects.wallpaper'] === 'cinema.jpg' &&
+      cin.v['dock.x'] + cin.v['dock.panelPad'] === cin.v['grid.x'] &&
+      cin.v['dock.w'] * cin.v['grid.cols'] + cin.v['dock.gap'] * (cin.v['grid.cols'] - 1) === cin.v['grid.width'] &&
+      cin.v['dock.gap'] === cin.v['grid.gapX'] &&
+      cin.v['dock.count'] === cin.v['grid.cols'],
+    'Cinema: a wallpaper under 200 KB, and dock tiles that sit exactly over the columns of the grid'
+  );
   const tbase = themeMod.normalize({ grid: { cols: 7 }, dock: { count: 6 } }, 'base'),
     tkid = themeMod.normalize({ grid: { cols: 'many' }, bar: { style: 'round' } }, 'kid', tbase.v);
   ok(

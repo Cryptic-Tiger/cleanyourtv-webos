@@ -34,6 +34,7 @@ folder of the GitHub repository (the `main` branch):
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 | Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
+| Cinema | A dark silk wallpaper, a thin clock and a glass dock of six wide apps at the bottom that lines up with the grid. Down slides the dock up and dims the screen; the focused app shows its name under the tile and a soft highlight instead of a ring. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -42,6 +43,8 @@ folder of the GitHub repository (the `main` branch):
 ![Bloom: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
 ![Horizon: the home screen and all apps shown with Down](screenshots/themes-4.jpg)
+
+![Cinema: the home screen and all apps shown with Down](screenshots/themes-5.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
@@ -149,6 +152,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | **type** | | | |
 | `type.font` | `default`, `serif`, `mono` | `default` | The typeface: the TV's own, a serif or a monospace. |
 | `type.scale` | 0.8 to 1.3 | `1` | Scale of the text of buttons, menus and tiles. |
+| `type.display` | `bold`, `regular`, `light` | `bold` | Weight of the large text, the time and the name of the focused app: `light` gives a thin clock. |
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |
 | `clock.date` | `true` or `false` | `true` | Show the date beside or under the time. |
@@ -203,10 +207,12 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `grid.y` | px, 0 to 1000 | empty | Distance of the grid from the top edge, in px. Empty: under the dock, or 290 for an overlay. |
 | `grid.clipTop` | 0 to 600 | `300` | Where scrolled rows disappear at the top, in px (`below` mode). |
 | `grid.focusScale` | 1 to 1.4 | `1.12` | Scale of the focused tile. |
+| `grid.caption` | `true` or `false` | `false` | Show the name of the focused app under its tile in the grid. |
 | `grid.overlayDim` | 0 to 1 | `0.95` | Opacity of the layer behind the overlay grid. |
 | `grid.overlayH` | 200 to 900 | `510` | Visible height of the overlay grid before it scrolls, in px. |
 | **tile** | | | |
 | `tile.gloss` | 0 to 1 | `0` | A light highlight on every tile. |
+| `tile.focusGloss` | 0 to 1 | `0` | A light highlight on the focused tile only; the stronger of this and `tile.gloss` is used. |
 | `tile.border` | 0 to 0.6 | `0` | Opacity of a thin outline on every tile. |
 | `tile.ringWidth` | 0 to 10 | `4` | Width of the focus ring, in px; 0 for none. |
 | `tile.ringOffset` | 0 to 14 | `4` | Space between a tile and its focus ring, in px. |

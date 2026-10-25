@@ -1,0 +1,86 @@
+{
+ "name": "Cinema",
+ "author": "CleanYourTV",
+ "description": "Dark silk wallpaper, a thin clock and a glass dock of six wide apps at the bottom. Down slides the dock up and shows every app, its name under the focus.",
+ "colors": {
+  "night": "#05060a",
+  "panel": "#161925",
+  "ink": "#f4f5f8",
+  "accent": "#f4f5f8"
+ },
+ "surface": {
+  "pillAlpha": 0.1,
+  "pillRing": 0.16,
+  "menuAlpha": 0.92,
+  "rowRadius": 22
+ },
+ "type": {
+  "display": "light"
+ },
+ "clock": {
+  "layout": "stack",
+  "x": 147,
+  "y": 64,
+  "scale": 1.5,
+  "dateScale": 0.9
+ },
+ "bar": {
+  "style": "pill",
+  "align": "right",
+  "x": 147,
+  "y": 68,
+  "size": 54,
+  "gap": 12
+ },
+ "shelf": {
+  "show": true,
+  "align": "left",
+  "x": 147,
+  "y": 690,
+  "scale": 0.8
+ },
+ "dock": {
+  "anchor": "bottom",
+  "align": "left",
+  "x": 123,
+  "y": 64,
+  "count": 6,
+  "w": 246,
+  "h": 148,
+  "gap": 30,
+  "radius": 20,
+  "panel": 0.08,
+  "panelPad": 24,
+  "lift": 8,
+  "focusScale": 1.1
+ },
+ "grid": {
+  "mode": "push",
+  "dockUp": 214,
+  "clipTop": 192,
+  "align": "left",
+  "x": 147,
+  "width": 1626,
+  "cols": 6,
+  "tileH": 148,
+  "gapX": 30,
+  "gapY": 62,
+  "radius": 20,
+  "focusScale": 1.1,
+  "caption": true,
+  "overlayDim": 0.72
+ },
+ "tile": {
+  "gloss": 0.12,
+  "focusGloss": 0.85,
+  "border": 0.07,
+  "ringWidth": 0
+ },
+ "effects": {
+  "glow": 0.25,
+  "glowColor": "app",
+  "speed": 1,
+  "wallpaper": "cinema.jpg",
+  "wallpaperDim": 0.05
+ }
+}
