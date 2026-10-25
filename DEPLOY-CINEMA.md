@@ -11,7 +11,8 @@ Replace `<TV-IP>` with the TV's address. Lines starting with `#` are comments.
 
 1. On GitHub (Safari is fine): open the fork, **Actions**, and enable workflows if GitHub asks (forks start with them off).
 2. The branch must be on GitHub. When it is pushed, the **Test build** workflow builds the package and publishes the pre-release
-   **test-premium-cinema** under **Releases** (a few minutes). Wait until it is there.
+   **test-premium-cinema** under **Releases** (a few minutes). Wait until it is there:
+   https://github.com/Cryptic-Tiger/cleanyourtv-webos/releases/tag/test-premium-cinema
 3. Keep a copy of the current settings on the TV:
 
 ```sh
