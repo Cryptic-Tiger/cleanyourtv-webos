@@ -1,5 +1,5 @@
 // The launcher's own API: the list of apps with their icons, how often each is used, the inputs, launching, and the launcher's
-// settings (dock, hidden apps, sort order, clock, top buttons).
+// settings (dock, hidden apps, sort order and your own order, clock, top buttons).
 //   GET /api/apps  GET /api/inputs  GET /api/foreground  POST /api/launch {id, params}  POST /api/config {...}  GET /icon/<app id>
 const fs = require('fs'),
   path = require('path');
@@ -104,11 +104,12 @@ function create(ctx) {
 
   // ---- the launcher's settings: only its own keys are replaced; options, keys, theme and the rest stay as they are ----
   function saveLauncherConfig(b) {
-    const strs = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 200) : undefined);
+    const strs = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 300) : undefined);
     const out = {};
     if (strs(b.dock)) out.dock = strs(b.dock).slice(0, 8);
     if (strs(b.hidden)) out.hidden = strs(b.hidden);
-    if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
+    if (b.sort === 'usage' || b.sort === 'alpha' || b.sort === 'custom') out.sort = b.sort;
+    if (strs(b.order)) out.order = strs(b.order).slice(0, 300); // your own order of the grid (sort: custom), app ids
     if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
     if (Array.isArray(b.topbar))
       out.topbar = b.topbar

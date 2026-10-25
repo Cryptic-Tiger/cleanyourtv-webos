@@ -30,4 +30,14 @@ run(async () => {
   ok(asked === 1 && r.j.apps[0].title === 'One' && Date.now() - t0 < 40, 'opened again soon: the list comes from memory at once');
   r = await call(apps, '/api/launch', 'POST', { id: 'bad id' });
   ok(r.code === 400, 'a bad app id is refused');
+  // your own order of the grid (moving apps in the launcher): kept with sort "custom"; a sort the launcher does not know is not kept
+  await call(apps, '/api/config', 'POST', { dock: ['a.one'], sort: 'custom', order: ['b', 'a', 7, 'c'] });
+  r = await call(apps, '/api/apps');
+  ok(
+    r.j.config.sort === 'custom' && r.j.config.order.join() === 'b,a,c' && r.j.config.dock[0] === 'a.one',
+    'your own app order is kept (app ids only)'
+  );
+  await call(apps, '/api/config', 'POST', { sort: 'random', order: 'x' });
+  r = await call(apps, '/api/apps');
+  ok(r.j.config.sort === undefined && r.j.config.order === undefined, 'an unknown sort or an order that is not a list is not kept');
 });

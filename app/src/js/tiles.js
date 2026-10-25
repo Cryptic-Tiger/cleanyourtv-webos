@@ -15,6 +15,14 @@ function tile(a) {
     paint(d, known);
     d._col = known;
   }
+  /* the picture has a layer of its own (a picture that fills the tile is cropped there), the name sits under the tile (grid.caption) */
+  var art = document.createElement('div');
+  art.className = 'art';
+  d.appendChild(art);
+  var cap = document.createElement('div');
+  cap.className = 'cap';
+  cap.textContent = a.title;
+  d.appendChild(cap);
   var i = new Image();
   i.alt = '';
   i.decoding = 'async';
@@ -38,14 +46,14 @@ function tile(a) {
     var t = document.createElement('div');
     t.className = 't';
     t.textContent = a.title;
-    d.appendChild(t);
+    art.appendChild(t);
     if (!colors[a.id]) {
       var f = hsl2rgb(hashHue(a.id), 0.42, 0.42);
       paint(d, { c: f, b: hsl2rgb(hashHue(a.id), 0.4, 0.2) });
     }
   }; /* not remembered: a failed load must not pin a made-up colour */
   i.src = a.id === '__live' ? LIVE_ICON : API + '/icon/' + encodeURIComponent(a.id);
-  d.appendChild(i);
+  art.appendChild(i);
   if (i.decode) i.decode().catch(function () {});
   return d;
 }

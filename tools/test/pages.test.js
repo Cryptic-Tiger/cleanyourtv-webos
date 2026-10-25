@@ -65,6 +65,26 @@ run(async () => {
       /\.tile\.fill\.f\s*\{\s*box-shadow:\s*0 0 0 var\(--ring-w\)/.test(fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8')),
     'the focus ring has its own rounded corners (an outline is a rectangle before Chromium 94), also on tiles that crop their picture'
   );
+  // a picture that fills its tile is cropped in its own layer (.art), not by the tile: the name under the focused tile (grid.caption)
+  // would be cut off otherwise; the dark layer behind an open grid covers the screen, not only the view below the clock
+  const home = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8'),
+    rule = sel => (home.match(new RegExp(sel.replace(/[.\[\]"=:]/g, '\\$&') + '\\s*\\{([^}]*)\\}')) || [])[1] || '';
+  ok(
+    /overflow:\s*hidden/.test(rule('.tile.fill .art')) &&
+      !/overflow/.test(rule('.tile.fill')) &&
+      /top:\s*100%/.test(rule('.tile .cap')) &&
+      /display:\s*var\(--cap-d\)/.test(rule('#grid .tile .cap')),
+    'the name under a tile is outside the crop of its picture'
+  );
+  ok(
+    !/#scroll::before/.test(home) && /width:\s*1920px;\s*height:\s*1080px/.test(rule('[data-grid="push"]::before')),
+    'the dark layer behind an open grid covers the whole screen'
+  );
+  const sway = (home.match(/@keyframes cytv-sway[\s\S]*?\n\}/g) || []).join('\n');
+  ok(
+    sway.length > 0 && !/(^|[{;\s])(left|top|width|height|margin|box-shadow|filter)\s*:/.test(sway),
+    'moving an app animates a transform only'
+  );
   const built = require(path.join(root, 'tools', 'build-pages.js'));
   for (const p of built.PAGES)
     ok(

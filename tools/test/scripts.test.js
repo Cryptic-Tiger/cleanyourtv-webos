@@ -128,10 +128,68 @@ run(async () => {
   // bootstrap.sh asks tvprofile.js for the per-TV decisions instead of deciding itself
   const bootText = fs.readFileSync(path.join(root, 'scripts', 'bootstrap.sh'), 'utf8');
   const stop = fs.readFileSync(path.join(root, 'scripts', 'debloat-stop.sh'), 'utf8'),
+    hostsSh = fs.readFileSync(path.join(root, 'scripts', 'debloat-hosts.sh'), 'utf8'),
     undo = fs.readFileSync(path.join(root, 'scripts', 'debloat-undo.sh'), 'utf8');
   ok(
-    /mount --bind \/tmp\/cleanyourtv-hosts \/etc\/hosts/.test(stop) && /umount \/etc\/hosts/.test(undo),
+    /sh \$L\/debloat-hosts\.sh/.test(stop) &&
+      /mount --bind \/tmp\/cleanyourtv-hosts \/etc\/hosts/.test(hostsSh) &&
+      /umount \/etc\/hosts/.test(undo),
     'where /etc/hosts is read-only (issue 11) the ad servers go into a copy in RAM, and the undo removes it'
+  );
+  // the hosts lines: the short list always, the longer one only with DEBLOAT-EXTRA; a changed list replaces the old lines, and the
+  // undo's own command (every line with the marker goes) gives back the original file
+  const hd = path.join(tmp, 'hostsdir'),
+    hf = path.join(hd, 'hosts'),
+    orig = '127.0.0.1 localhost\n::1 localhost\n192.168.1.5 nas # mine\n';
+  fs.mkdirSync(hd);
+  fs.writeFileSync(hf, orig);
+  const hosts = () =>
+    cp.spawnSync('sh', [path.join(root, 'scripts', 'debloat-hosts.sh')], {
+      encoding: 'utf8',
+      env: Object.assign({}, process.env, { CYTV_HOSTS: hf, CYTV_DIR: hd }),
+    });
+  const marked = () =>
+    fs
+      .readFileSync(hf, 'utf8')
+      .split('\n')
+      .filter(l => /# cleanyourtv-debloat$/.test(l));
+  let hr = hosts();
+  const short = fs.readFileSync(hf, 'utf8');
+  ok(
+    hr.status === 0 &&
+      short.indexOf(orig) === 0 &&
+      marked().length === 2 &&
+      /nl\.ad\.lgsmartad\.com/.test(short) &&
+      !/us\.ad\.lgsmartad\.com/.test(short),
+    'the debloat adds the short list of ad servers after the existing lines'
+  );
+  hosts();
+  ok(fs.readFileSync(hf, 'utf8') === short, 'run again, nothing changes');
+  fs.writeFileSync(path.join(hd, 'DEBLOAT-EXTRA'), '');
+  hosts();
+  const long = fs.readFileSync(hf, 'utf8');
+  ok(
+    marked().length === 8 &&
+      /^127\.0\.0\.1 us\.ad\.lgsmartad\.com us\.info\.lgsmartad\.com /m.test(long) &&
+      /^::1 .*aic\.homeprv\.lgtvcommon\.com/m.test(long) &&
+      long.indexOf(orig) === 0 &&
+      long.split('\n').filter(l => /nl\.ad\.lgsmartad/.test(l)).length === 2,
+    'with DEBLOAT-EXTRA the longer list replaces the short one, nothing twice'
+  );
+  fs.unlinkSync(path.join(hd, 'DEBLOAT-EXTRA'));
+  hosts();
+  ok(fs.readFileSync(hf, 'utf8') === short, 'without it again, the short list is back');
+  ok(
+    fs
+      .readFileSync(hf, 'utf8')
+      .split('\n')
+      .filter(l => !/# cleanyourtv-debloat/.test(l))
+      .join('\n') === orig,
+    "the undo's removal of the marked lines gives back the original file"
+  );
+  ok(
+    /\[ -n "\$CYTV_HOSTS" \]/.test(hostsSh) && /H=\/etc\/hosts/.test(hostsSh),
+    'the hosts file of the computer running the tests is never the one changed'
   );
   ok(
     /TV="node \$S\/helper\/tvprofile\.js"/.test(bootText) &&

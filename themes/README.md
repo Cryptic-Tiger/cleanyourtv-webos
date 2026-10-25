@@ -53,6 +53,16 @@ A row of seven square apps along the bottom of a dusk landscape, the clock on th
 
 Folder: [`horizon/`](horizon/)
 
+### Cinema
+
+A dark silk wallpaper, a thin clock and a glass dock of six wide apps at the bottom that lines up with the grid. Down slides the dock
+up, dims the screen and shows every app with the name of the focused one under it. The wallpaper is drawn by
+[`tools/wallpaper-cinema.py`](../tools/wallpaper-cinema.py).
+
+[![Cinema](cinema/preview.jpg)](cinema/preview.jpg)
+
+Folder: [`cinema/`](cinema/)
+
 ### Compact
 
 Twelve columns of smaller tiles: more apps on screen.

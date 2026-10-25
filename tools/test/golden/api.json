@@ -74,6 +74,7 @@
       "--bar-r": "96px",
       "--bar-t": "54px",
       "--bar-tx": "none",
+      "--cap-d": "none",
       "--clock-ai": "flex-start",
       "--clock-b": "auto",
       "--clock-d": "flex",
@@ -98,6 +99,7 @@
       "--dock-t": "60px",
       "--dock-tx": "none",
       "--dock-w": "408px",
+      "--fgloss": "0",
       "--focus": "#f5f6f8",
       "--font": "\"LG Smart UI\",\"Helvetica Neue\",Helvetica,Arial,sans-serif",
       "--fs": "1",
@@ -134,7 +136,9 @@
       "--tile-h": "151px",
       "--tile-r": "34px",
       "--tile-w": "151px",
-      "--view-top": "300px"
+      "--view-top": "300px",
+      "--w-name": "700",
+      "--w-time": "600"
      },
      "viewH": 780,
      "wallpaper": null
@@ -292,6 +296,7 @@
       "--bar-r": "96px",
       "--bar-t": "54px",
       "--bar-tx": "none",
+      "--cap-d": "none",
       "--clock-ai": "flex-start",
       "--clock-b": "auto",
       "--clock-d": "flex",
@@ -316,6 +321,7 @@
       "--dock-t": "60px",
       "--dock-tx": "none",
       "--dock-w": "408px",
+      "--fgloss": "0",
       "--focus": "#f5f6f8",
       "--font": "\"LG Smart UI\",\"Helvetica Neue\",Helvetica,Arial,sans-serif",
       "--fs": "1",
@@ -352,7 +358,9 @@
       "--tile-h": "151px",
       "--tile-r": "34px",
       "--tile-w": "151px",
-      "--view-top": "300px"
+      "--view-top": "300px",
+      "--w-name": "700",
+      "--w-time": "600"
      },
      "viewH": 780,
      "wallpaper": null

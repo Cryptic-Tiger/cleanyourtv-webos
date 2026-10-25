@@ -12,6 +12,8 @@
   --focus: #f5f6f8;
   --font: "LG Smart UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --fs: 1;
+  --w-time: 600;
+  --w-name: 700;
   --spd: 1;
   --glow-op: 1;
   --wall: none;
@@ -67,8 +69,10 @@
   --grid-w: 1728px;
   --grid-t: 350px;
   --grid-fs: 1.12;
+  --cap-d: none;
   --ov-dim: 0.95;
   --gloss: 0;
+  --fgloss: 0;
   --tile-border: 0;
   --ring-w: 4px;
   --ring-off: 4px;
@@ -131,7 +135,7 @@ body {
 }
 #time {
   font-size: calc(56px * var(--fs) * var(--clock-s));
-  font-weight: 600;
+  font-weight: var(--w-time);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -219,10 +223,16 @@ body {
   text-align: var(--name-a);
   display: var(--name-d);
   z-index: 5;
+  transition: opacity calc(0.2s * var(--spd)) linear;
+}
+/* the name belongs to the home screen: an open grid (push or overlay) covers that part of the screen, and a tile there shows its own */
+[data-grid="push"].grid-open #shelf,
+[data-grid="overlay"].grid-open #shelf {
+  opacity: 0;
 }
 #name {
   font-size: calc(92px * var(--fs) * var(--name-s));
-  font-weight: 700;
+  font-weight: var(--w-name);
   letter-spacing: -0.028em;
   line-height: 1.05;
   white-space: nowrap;
@@ -286,22 +296,24 @@ body {
   opacity: 1;
   pointer-events: auto;
 }
-[data-grid="overlay"] #scroll::before,
-[data-grid="push"] #scroll::before {
+/* the dark layer behind an open grid covers the whole screen, under the view and the clock: a layer inside the view stopped at its top
+   edge and left a band of undimmed wallpaper behind the clock and the buttons */
+[data-grid="overlay"]::before,
+[data-grid="push"]::before {
   content: "";
   position: absolute;
   left: 0;
-  top: -1600px;
+  top: 0;
   width: 1920px;
-  height: 4400px;
-  z-index: 2;
+  height: 1080px;
+  z-index: 1;
   opacity: 0;
   pointer-events: none;
   background: rgba(var(--night-rgb), var(--ov-dim));
   transition: opacity calc(0.22s * var(--spd)) linear;
 }
-[data-grid="overlay"].grid-open #scroll::before,
-[data-grid="push"].grid-open #scroll::before {
+[data-grid="overlay"].grid-open::before,
+[data-grid="push"].grid-open::before {
   opacity: 1;
 }
 /* push: the grid sits under the dock; focusing it scrolls the dock up and fades the grid in */
@@ -335,6 +347,48 @@ body {
   pointer-events: none;
   opacity: var(--gloss);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, 0.24));
+  transition: opacity calc(0.12s * var(--spd)) linear;
+}
+.tile.f::after {
+  opacity: var(--fgloss);
+}
+/* the picture sits in its own layer: a picture that fills the tile is cropped there, so the name under the tile is not cut off */
+.tile .art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+/* the name of the focused app under its tile (grid.caption) */
+.tile .cap {
+  display: none;
+  position: absolute;
+  left: -24px;
+  right: -24px;
+  top: 100%;
+  margin-top: 14px;
+  text-align: center;
+  font-size: calc(24px * var(--fs));
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity calc(0.15s * var(--spd)) linear;
+}
+#grid .tile .cap {
+  display: var(--cap-d);
+}
+#grid .tile.f .cap {
+  opacity: 1;
 }
 
 .tile {
@@ -353,7 +407,7 @@ body {
 .snap .pill {
   transition: none;
 } /* held arrow key: follow the focus without animating each step */
-.tile.fill {
+.tile.fill .art {
   overflow: hidden;
 }
 .tile.fill img {
@@ -365,6 +419,29 @@ body {
 }
 .tile.launching {
   opacity: 0.82;
+}
+/* an app being moved (hold OK, Move): it lifts and sways until OK puts it down; a transform only, like every other animation here */
+@keyframes cytv-sway {
+  from {
+    transform: scale(1.1) rotate(-1.4deg);
+  }
+  to {
+    transform: scale(1.1) rotate(1.4deg);
+  }
+}
+@keyframes cytv-sway-dock {
+  from {
+    transform: translateY(-8px) scale(1.06) rotate(-1deg);
+  }
+  to {
+    transform: translateY(-8px) scale(1.06) rotate(1deg);
+  }
+}
+#grid .tile.mv {
+  animation: cytv-sway calc(0.16s * var(--spd)) ease-in-out infinite alternate;
+}
+#dock .tile.mv {
+  animation: cytv-sway-dock calc(0.16s * var(--spd)) ease-in-out infinite alternate;
 }
 .tile img {
   object-fit: contain;
