@@ -1,6 +1,6 @@
 # Cinema on a 55UQ7570PUJ: deploying from an iPhone
 
-This branch (`premium-cinema` in `Cryptic-Tiger/cleanyourtv-WebOS`) adds the **Cinema** theme and launcher 1.6.0 with service 1.7.0
+This branch (`premium-cinema` in `Cryptic-Tiger/cleanyourtv-webos`) adds the **Cinema** theme and launcher 1.6.0 with service 1.7.0
 (moving apps, your own app order, show and hide apps, an HDMI input as a top button, the name under the focused tile). Everything
 below runs from **a-Shell** on the iPhone over the SSH key that already works. Nothing is reinstalled or rooted again; the manager's
 own update path is used, which keeps the previous launcher and service files for a rollback.
@@ -27,7 +27,7 @@ Still in the SSH session. The `source` file tells the service which repository a
 (`helper/updates.js`, `helper/theme.js`):
 
 ```sh
-echo 'Cryptic-Tiger/cleanyourtv-WebOS premium-cinema' > /media/developer/cleanyourtv/source
+echo 'Cryptic-Tiger/cleanyourtv-webos premium-cinema' > /media/developer/cleanyourtv/source
 curl -s -X POST localhost:8765/api/manager/channel -d '{"tag":"test-premium-cinema"}' | grep -o '"updateTo":"[^"]*"'
 ```
 
