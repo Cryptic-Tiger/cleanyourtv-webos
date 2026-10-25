@@ -33,28 +33,22 @@ curl -s -X POST localhost:8765/api/manager/channel -d '{"tag":"test-premium-cine
 
 It should print `"updateTo":"1.7.0"` (the service) and `"updateTo":"1.6.0"` (the launcher). Nothing is installed yet.
 
-## 2. Service first, then the launcher
+## 2. Update the service (it brings the launcher with it)
 
-The launcher 1.6.0 asks for service 1.7.0, so the service goes first:
+The package carries launcher 1.6.0, and the service update puts it in place too, keeping 1.5.1 as the previous launcher. Do **not**
+also press the Launcher row or call `update-frontend` afterwards: that would replace the kept 1.5.1 with a second copy of 1.6.0.
 
 ```sh
 curl -s -X POST localhost:8765/api/manager/update-service -d '{"version":"1.7.0"}'
-# about two minutes: the package installs and the service restarts (the connection may drop; reconnect with ssh)
+# about two minutes: the package installs, the service restarts and Home reloads (the connection may drop; reconnect with ssh)
 curl -s localhost:8765/api/version
+curl -s localhost:8765/api/manager/status | grep -o '"frontend":{[^}]*}'
 ```
 
-When it answers `{"version":"1.7.0"}`:
+Expected: `{"version":"1.7.0"}`, and a launcher `"version":"1.6.0"` with `"previous":"1.5.1"`. If the service update fails, the
+previous service files come back by themselves.
 
-```sh
-curl -s -X POST localhost:8765/api/manager/update-frontend -d '{"version":"1.6.0"}'
-# about a minute; Home reloads. Check the result:
-curl -s localhost:8765/api/manager/status | grep -o '"job":{[^}]*}'
-```
-
-`"state":"done"` means it is in place. A launcher that does not start is replaced by the previous one automatically.
-
-The same can be done with the remote: **CleanYourTV** app > **Update channel** > **Test: premium-cinema**, then the **Service** row,
-then the **Launcher** row.
+With the remote instead: **CleanYourTV** app > **Update channel** > **Test: premium-cinema**, then the **Service** row only.
 
 ## 3. The theme
 
@@ -93,15 +87,22 @@ ssh root@<TV-IP> 'mkdir -p /media/developer/cleanyourtv/themes/cinema'
 scp theme.json cinema.jpg root@<TV-IP>:/media/developer/cleanyourtv/themes/cinema/
 ```
 
-Then on the TV (`ssh root@<TV-IP>`), compare the checksum with the `.sha256` file that came with the package, and update with the
-project's installer, which installs a local package with `CYTV_IPK` and, on a TV that is already set up, only updates:
+Then on the TV (`ssh root@<TV-IP>`): compare the checksum with the `.sha256` file that came with the package, install the package
+the way the manager does, wait until the new files are there, and run the service's own update (it keeps the previous files and
+launcher, and goes back to them when the new service does not start):
 
 ```sh
 node -e 'console.log(require("crypto").createHash("sha256").update(require("fs").readFileSync("/tmp/cytv.ipk")).digest("hex"))'
-curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | CYTV_IPK=/tmp/cytv.ipk sh
+luna-send -n 1 -w 30000 -f luna://com.webos.appInstallService/dev/install '{"id":"com.cleanyourtv.manager","ipkUrl":"/tmp/cytv.ipk","subscribe":false}' </dev/null
+S=/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service
+for i in $(seq 1 40); do grep -q "const VERSION = '1.7.0'" $S/helper/helper.js && break; sleep 3; done; grep "const VERSION" $S/helper/helper.js
+sh $S/bootstrap.sh update 1.7.0
 curl -s localhost:8765/api/version
 curl -s -X POST localhost:8765/api/theme/set -d '{"id":"cinema"}' | grep -o '"current":{[^}]*}'
 ```
+
+Run `bootstrap.sh update` only once the `grep` line shows `'1.7.0'`; if it still shows `'1.6.4'` after two minutes, the package was
+not installed and nothing has changed.
 
 The theme is taken from the copied folder when GitHub has no copy of it (copy it before the update, as above: the service reads the
 theme folders when it starts). The manager then offers the stable release as an "update": that is the way back (see Rollback), not
@@ -112,17 +113,20 @@ something to install.
 | To undo | Command (in `ssh root@<TV-IP>`) |
 |---|---|
 | The theme | `curl -s -X POST localhost:8765/api/theme/revert` (the previous theme), or `-d '{"id":"classic"}'` to `/api/theme/set` |
-| The launcher only | `curl -s -X POST localhost:8765/api/manager/rollback-frontend -d '{}'` (back to 1.5.1, kept as `app.prev`) |
+| The launcher only | `curl -s -X POST localhost:8765/api/manager/rollback-frontend -d '{}'` (back to 1.5.1, kept as `app.prev`; the theme's new touches then simply do not show) |
 | The longer debloat list | `rm /media/developer/cleanyourtv/DEBLOAT-EXTRA && sh /media/developer/cleanyourtv/debloat-hosts.sh` |
 | Your settings | `cp /media/developer/cytv-before-cinema/config.json /media/developer/cleanyourtv/config.json`, then press Home |
 | LG's Home, right now | `sh /media/developer/cleanyourtv/undo-home.sh` (or **CleanYourTV as Home** off in the app) |
 
-Everything back to the stable release (the launcher first, because 1.5.1 runs on service 1.7.0 but 1.6.0 needs 1.7.0):
+Everything back to the stable release: first the theme and the longer debloat list (older versions do not know them), then the
+launcher, because 1.5.1 runs on service 1.7.0 but 1.6.0 needs 1.7.0, then the service:
 
 ```sh
+curl -s -X POST localhost:8765/api/theme/set -d '{"id":"classic"}' >/dev/null
+rm -f /media/developer/cleanyourtv/DEBLOAT-EXTRA && sh /media/developer/cleanyourtv/debloat-hosts.sh
 rm -f /media/developer/cleanyourtv/source
 curl -s -X POST localhost:8765/api/manager/channel -d '{"tag":""}' | grep -o '"updateTo":"[^"]*"'
-# use the two numbers it prints (1.5.1 and 1.6.4 at the time of writing)
+# it prints the service's number first, then the launcher's (1.6.4 and 1.5.1 at the time of writing); use them below
 curl -s -X POST localhost:8765/api/manager/update-frontend -d '{"version":"1.5.1"}'
 # about a minute, then:
 curl -s -X POST localhost:8765/api/manager/update-service -d '{"version":"1.6.4"}'
@@ -132,7 +136,7 @@ If a boot ever goes wrong, the Homebrew Channel's failsafe mode skips all boot s
 
 ## What was and was not checked
 
-Checked in this session, without a TV: every test in `tools/test` (365 checks) under Node.js 22, the type checks and lint, the built
+Checked in this session, without a TV: every test in `tools/test` (366 checks) under Node.js 22, the type checks and lint, the built
 pages, and the launcher in headless Chromium (the theme's screenshots, moving apps in the grid and the dock, your own order saved
 through the service's own handler, show and hide apps, an input as a top button, the name under the focused tile, no script errors).
 

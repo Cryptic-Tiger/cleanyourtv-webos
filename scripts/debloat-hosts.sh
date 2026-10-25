@@ -33,20 +33,30 @@ X
 ::1 aic.recommend.lgtvcommon.com eic.recommend.lgtvcommon.com cdpbeacon.lgtvcommon.com rdl.lgtvcommon.com # cleanyourtv-debloat
 X
 }
+# one run at a time (the boot hook, the manager's switch and a run by hand can meet): a lock folder, gone at the next restart (/tmp is in RAM)
+K=/tmp/cleanyourtv-hosts.lock
+[ -n "$CYTV_HOSTS" ] && K=$CYTV_HOSTS.lock
+n=0
+until mkdir $K 2>/dev/null; do
+  n=$((n + 1))
+  [ $n -ge 30 ] && { echo "hosts: another run holds $K; nothing changed"; exit 1; }
+  sleep 1
+done
+T=$K/hosts
+trap 'rm -rf $K' EXIT
 [ "$(grep "$M" $H)" = "$(add_hosts)" ] && exit 0
 # an earlier copy in RAM goes first, so the new one is made from the real file
 if [ -z "$CYTV_HOSTS" ] && [ -e /tmp/cleanyourtv-hosts.mounted ]; then umount $H 2>/dev/null && rm -f /tmp/cleanyourtv-hosts /tmp/cleanyourtv-hosts.mounted; fi
-T=${CYTV_HOSTS:+$CYTV_HOSTS.tmp}
-T=${T:-/tmp/cleanyourtv-hosts.new}
+# the new file: every line that is not ours, then the list. It is written only when it is complete: the same other lines, the whole list
 grep -v "$M" $H > $T
-add_hosts >> $T
+[ $? -le 1 ] && add_hosts >> $T && [ "$(grep -v "$M" $T)" = "$(grep -v "$M" $H)" ] && [ "$(grep "$M" $T)" = "$(add_hosts)" ] \
+  || { echo "hosts: could not prepare the new file; nothing changed"; exit 1; }
 if [ -w $H ] && cat $T > $H 2>/dev/null; then
-  rm -f $T
+  :
 elif [ -z "$CYTV_HOSTS" ]; then
   # on some TVs /etc/hosts is on the read-only system partition (issue 11): a copy in RAM is mounted over it until the next restart
-  mv $T /tmp/cleanyourtv-hosts && mount --bind /tmp/cleanyourtv-hosts /etc/hosts && touch /tmp/cleanyourtv-hosts.mounted \
+  cp $T /tmp/cleanyourtv-hosts && mount --bind /tmp/cleanyourtv-hosts /etc/hosts && touch /tmp/cleanyourtv-hosts.mounted \
     || echo "hosts: /etc/hosts cannot be changed on this TV; the ad servers are not blocked"
 else
-  rm -f $T
   echo "hosts: $H cannot be changed"
 fi

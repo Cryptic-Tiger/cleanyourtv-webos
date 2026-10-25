@@ -187,6 +187,21 @@ run(async () => {
       .join('\n') === orig,
     "the undo's removal of the marked lines gives back the original file"
   );
+  // runs that meet (the boot hook, the manager's switch, a run by hand) take turns: nothing of the file is lost, nothing is there twice
+  fs.writeFileSync(path.join(hd, 'DEBLOAT-EXTRA'), '');
+  const many = cp.spawnSync(
+    'sh',
+    ['-c', 'for i in 1 2 3 4 5 6 7 8 9 10 11 12; do sh "$0" >/dev/null & done; wait', path.join(root, 'scripts', 'debloat-hosts.sh')],
+    {
+      encoding: 'utf8',
+      env: Object.assign({}, process.env, { CYTV_HOSTS: hf, CYTV_DIR: hd }),
+    }
+  );
+  ok(
+    many.status === 0 && fs.readFileSync(hf, 'utf8') === long && !fs.existsSync(hf + '.lock'),
+    'twelve runs at once leave the same file as one run, and no lock behind'
+  );
+  fs.unlinkSync(path.join(hd, 'DEBLOAT-EXTRA'));
   ok(
     /\[ -n "\$CYTV_HOSTS" \]/.test(hostsSh) && /H=\/etc\/hosts/.test(hostsSh),
     'the hosts file of the computer running the tests is never the one changed'
